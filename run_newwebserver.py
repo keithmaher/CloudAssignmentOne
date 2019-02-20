@@ -64,11 +64,14 @@ def launch_instance():
         UserData=userdatae
     )
 
+# git add README.md
+# git commit -m "first commit"
+# git remote add origin https://github.com/keithmaher/CloudAssignmentOne.git
+# git push -u origin master
+
     message("New instance created with ID: "+instance[0].id)
     newInstance = instance[0].id
     return newInstance
-
-https://github.com/keithmaher/CloudAssignmentOne.git
 
 
 
