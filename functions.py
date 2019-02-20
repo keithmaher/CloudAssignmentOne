@@ -12,7 +12,7 @@ import time
 import datetime
 import sys
 import boto3
-from subprocess import run
+from subprocess import *
 import webbrowser
 ec2 = boto3.resource('ec2')
 s3 = boto3.resource('s3')
@@ -48,9 +48,15 @@ def copy_and_check(id):
         message("DNS : " + dns)
         message("State : " + state)
 
-        run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+" sudo yum install python37 -y", shell=True)
-        run("scp -i /home/keithmaher/Keiths_KeyPair.pem check_webserver.py ec2-user@"+dns+":/tmp", shell=True)
-        run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+" python3 /tmp/check_webserver.py", shell=True)
+        try:
+            response = run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@" + dns + " sudo yum install python37 -y", shell=True)
+            code = response.returncode
+            if (code == 0):
+                run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@" + dns + " sudo yum install python37 -y", shell=True)
+                run("scp -i /home/keithmaher/Keiths_KeyPair.pem check_webserver.py ec2-user@" + dns + ":/tmp", shell=True)
+                run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@" + dns + " python3 /tmp/check_webserver.py", shell=True)
+        except Exception as error:
+            message(error)
         return dns
 
 
@@ -88,10 +94,15 @@ def create_new_home_page(bucket_nameIn, dns):
         f.write(tag)
         f.close()
 
-        run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo touch /var/www/html/index.html", shell=True)
-        run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo chmod 777 /var/www/html/index.html", shell=True)
-        run("scp -i /home/keithmaher/Keiths_KeyPair.pem index.html ec2-user@"+dns+ ":/var/www/html/", shell=True)
-        webbrowser.get('firefox').open_new_tab(url)
+        response = run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo touch /var/www/html/index.html", shell=True)
+        code = response.returncode
+        if(code == 0):
+            run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo touch /var/www/html/index.html", shell=True)
+            run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo chmod 777 /var/www/html/index.html", shell=True)
+            run("scp -i /home/keithmaher/Keiths_KeyPair.pem index.html ec2-user@"+dns+ ":/var/www/html/", shell=True)
+            webbrowser.get('firefox').open_new_tab(url)
+        else:
+            message("Something Went Wrong With SSH")
 
     except Exception as error:
         message(error)

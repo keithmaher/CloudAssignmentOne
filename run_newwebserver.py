@@ -38,9 +38,6 @@ def launch_instance():
     sudo cp /var/lib/jenkins/secrets/initialAdminPassword /tmp/password.txt 
     echo Password for Jenkins in password.txt >> /tmp/log.txt"""
 
-    userdatae = """#!/bin/bash
-    echo "Updating yum" >> /tmp/log.txt"""
-
     instance = ec2.create_instances(
         ImageId= 'ami-0bdb1d6c15a40392c',
         KeyName= 'Keiths_KeyPair',
@@ -61,13 +58,8 @@ def launch_instance():
         MinCount=1,
         MaxCount=1,
         InstanceType='t2.micro',
-        UserData=userdatae
+        UserData=user_data_script
     )
-
-# git add README.md
-# git commit -m "first commit"
-# git remote add origin https://github.com/keithmaher/CloudAssignmentOne.git
-# git push -u origin master
 
     message("New instance created with ID: "+instance[0].id)
     newInstance = instance[0].id

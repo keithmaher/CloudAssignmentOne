@@ -17,10 +17,14 @@ code = result.returncode
 if(code != 0):
 	print("Apache Web Server Is Inactive")
 	print("Starting Apache Web Server")
-	run("sudo yum install httpd", shell=True)
-	run("sudo systemctl enable httpd", shell=True)
-	run("sudo service httpd start", shell=True)
-	time.sleep(2)
+	try:
+		run("sudo yum install httpd", shell=True)
+		run("sudo systemctl enable httpd", shell=True)
+		run("sudo service httpd start", shell=True)
+		time.sleep(2)
+	except Exception as error:
+		print(error)
+
 
 result = run("sudo service httpd status",  shell=True)
 code = result.returncode
