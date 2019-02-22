@@ -6,31 +6,43 @@
 # Google's Python Class
 # http://code.google.com/edu/languages/google-python-class/
 
+from subprocess import *
 
-# http://pypi.python.org/pypi/psutil/
-import time
-from subprocess import run
 
-result = run("sudo service httpd status",  shell=True)
-code = result.returncode
+def message(text):
+	print("* * * * * * * * * * * * * * * * *")
+	print(text)
+	print("* * * * * * * * * * * * * * * * *")
 
-if(code != 0):
-	print("Apache Web Server Is Inactive")
-	print("Starting Apache Web Server")
+
+def checkhttpd():
 	try:
-		run("sudo yum install httpd", shell=True)
-		run("sudo systemctl enable httpd", shell=True)
-		run("sudo service httpd start", shell=True)
-		time.sleep(2)
-	except Exception as error:
-		print(error)
+		checkhttpd = 'ps -A | grep httpd'
+		starthttpd = """#!/bin/bash
+		sudo yum install httpd -y
+		sudo systemctl enable httpd
+		sudo systemctl start httpd"""
+
+		run(checkhttpd, check=True, shell=True)
+		message("Web Server IS running")
+
+	except CalledProcessError:
+		message("Web Server IS NOT running")
+		message("Starting Web Server")
+		try:
+			run(starthttpd, check=True, shell=True)
+			message("Web Server IS running")
+
+		except CalledProcessError:
+			message("Web Server IS NOT running")
 
 
-result = run("sudo service httpd status",  shell=True)
-code = result.returncode
+# Define a main() function.
+def main():
+	checkhttpd()
 
-if(code == 0):
-	print("Apache Web Server Is Active")
-	time.sleep(2)
 
+# This is the standard boilerplate that calls the main() function.
+if __name__ == '__main__':
+	main()
 

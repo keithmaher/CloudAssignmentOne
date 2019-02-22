@@ -18,13 +18,10 @@ ec2 = boto3.resource('ec2')
 s3 = boto3.resource('s3')
 
 
-
 def message(text):
     print("* * * * * * * * * * * * * * * * *")
     print(text)
     print("* * * * * * * * * * * * * * * * *")
-
-
 
 
 def copy_and_check(id):
@@ -45,24 +42,31 @@ def copy_and_check(id):
         name = instance.id
         dns = instance.public_dns_name
         message("Connecting to: " + name)
-        message("DNS : " + dns)
-        message("State : " + state)
+        message("Instance DNS : " + dns)
+        message("Instance State : " + state)
 
         try:
-            response = run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@" + dns + " sudo yum install python37 -y", shell=True)
-            code = response.returncode
-            if (code == 0):
-                run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@" + dns + " sudo yum install python37 -y", shell=True)
-                run("scp -i /home/keithmaher/Keiths_KeyPair.pem check_webserver.py ec2-user@" + dns + ":/tmp", shell=True)
-                run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@" + dns + " python3 /tmp/check_webserver.py", shell=True)
-        except Exception as error:
-            message(error)
+            ssh = 'ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@'+dns+' sudo yum install python37 -y'
+            scp = 'scp -i /home/keithmaher/Keiths_KeyPair.pem check_webserver.py ec2-user@'+dns+':/tmp'
+            upload = 'ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@'+dns+' python3 /tmp/check_webserver.py'
+
+            run(ssh, check=True, shell=True)
+            run(scp, check=True, shell=True)
+            run(upload, check=True, shell=True)
+
+        except CalledProcessError:
+            message('something is Wrong')
+            message('Trying again')
+            run(ssh, shell=True)
+            run(scp, shell=True)
+            run(upload, shell=True)
+
         return dns
 
 
+def create_bucket(bucket_name_input, micro):
+    bucket_name = bucket_name_input+'-'+micro
 
-def create_bucket(micro):
-    bucket_name = 'witcloudassignmentone2019'+micro
     try:
         response = s3.create_bucket(Bucket=bucket_name,CreateBucketConfiguration={'LocationConstraint': 'eu-west-1'})
         message(response)
@@ -71,8 +75,8 @@ def create_bucket(micro):
         message(error)
 
 
-def upload_img(bucket_nameIn):
-    bucket_name = bucket_nameIn
+def upload_img(bucket_name_in):
+    bucket_name = bucket_name_in
     object_name = 'image.jpg'
 
     try:
@@ -82,27 +86,47 @@ def upload_img(bucket_nameIn):
         message(error)
 
 
-def create_new_home_page(bucket_nameIn, dns):
+def create_new_home_page(bucket_name_in, dns):
 
-    bucket_name = bucket_nameIn
+    bucket_name = bucket_name_in
     object_name = 'image.jpg'
 
     try:
         url = "https://s3-eu-west-1.amazonaws.com/"+bucket_name+"/"+object_name
-        tag = "<!DOCTYPE html><html><body><img src='" + url + "'></body></html>"
-        f = open("index.html", "w")
-        f.write(tag)
-        f.close()
+        tag = "<!DOCTYPE html><html><head><title>Assignment One</title></head><body><h1>Assignment One</h1><p>Image displaying from</p><p><a href='"+url+"' target='_blank'>"+url+"</a></p><hr><br><img src='"+url+"' height='500px' width='500px'></body></html>"
+        index = open("index.html", "w")
+        index.write(tag)
+        index.close()
 
-        response = run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo touch /var/www/html/index.html", shell=True)
-        code = response.returncode
-        if(code == 0):
-            run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo touch /var/www/html/index.html", shell=True)
-            run("ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@"+dns+ " sudo chmod 777 /var/www/html/index.html", shell=True)
-            run("scp -i /home/keithmaher/Keiths_KeyPair.pem index.html ec2-user@"+dns+ ":/var/www/html/", shell=True)
-            webbrowser.get('firefox').open_new_tab(url)
-        else:
-            message("Something Went Wrong With SSH")
+        touch_index = 'ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@'+dns+' sudo touch /var/www/html/index.html'
+        change_permissiona = 'ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@'+dns+' sudo chmod 777 /var/www/html/index.html'
+        scp_file = 'scp -i /home/keithmaher/Keiths_KeyPair.pem index.html ec2-user@'+dns+':/var/www/html/'
+        run(touch_index, check=True, shell=True)
+        run(change_permissiona, check=True, shell=True)
+        run(scp_file, check=True, shell=True)
 
-    except Exception as error:
-        message(error)
+        webbrowser.get('firefox').open_new_tab(url)
+
+    except CalledProcessError:
+        message('something is Wrong')
+        message('Trying again')
+        run(touch_index, shell=True)
+        run(change_permissiona, shell=True)
+        run(scp_file, shell=True)
+
+
+def download_jenkins(dns):
+
+    try:
+        scp = 'scp -i /home/keithmaher/Keiths_KeyPair.pem download_jenkins.py ec2-user@'+dns+':/tmp'
+        upload = 'ssh -i /home/keithmaher/Keiths_KeyPair.pem ec2-user@'+dns+' python3 /tmp/download_jenkins.py'
+
+        run(scp, check=True, shell=True)
+        run(upload, check=True, shell=True)
+
+    except CalledProcessError:
+        message('something is Wrong')
+        message('Trying again')
+        run(scp, shell=True)
+        run(upload, shell=True)
+
