@@ -16,13 +16,12 @@ def launch_instance():
     sudo yum update -y
     echo "Installing Apache" >> /tmp/log.txt
     sudo yum install httpd -y
-    sudo systemctl enable httpd
-    sudo systemctl start httpd"""
+    sudo systemctl enable httpd"""
 
     instance = ec2.create_instances(
-        ImageId= 'ami-0bdb1d6c15a40392c',
-        KeyName= 'Keiths_KeyPair',
-        SecurityGroups = [
+        ImageId='ami-0bdb1d6c15a40392c',
+        KeyName='Keiths_KeyPair',
+        SecurityGroups=[
             'collegeSSH'
         ],
         TagSpecifications=[
@@ -59,8 +58,8 @@ def main():
     upload_img(bucket_name)
     create_new_home_page(bucket_name, instance_dns)
     download_jenkins(instance_dns)
+    memory_usage(instance_dns)
 
 
 if __name__ == '__main__':
     main()
-
