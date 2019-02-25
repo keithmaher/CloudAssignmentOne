@@ -17,6 +17,9 @@ def message(text):
     print("* * * * * * * * * * * * * * * * *")
 
 
+#
+# Check and display memory status to the user
+#
 def check_memory():
 
     message('Checking memory status')

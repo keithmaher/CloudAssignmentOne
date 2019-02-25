@@ -25,6 +25,14 @@ def message(input_text):
     print("* * * * * * * * * * * * * * * * *")
 
 
+#
+# This function downloads python3 on the instance
+# Copies a python file using scp up to the instance.
+# The instance eId is passed in so it can be used to find the correct instance that was just created.
+# It waits till the instance is running to get the DNS name of the instance
+# Also waits 120 seconds for the user data to download. (yum update)
+# Runs the check_webserver.py file.
+#
 def copy_and_check(instance_id):
     running_instances = ec2.instances.filter(Filters=[{
         'Name': 'instance-id',
@@ -72,6 +80,10 @@ def copy_and_check(instance_id):
         return instance_dns
 
 
+#
+# Create an S3 bucket using the user-input and micro to make a unique bucket name/
+# Return the unique bucket name.
+#
 def create_bucket(bucket_name_input, micro):
     bucket_name = bucket_name_input+'-'+micro
 
@@ -83,17 +95,27 @@ def create_bucket(bucket_name_input, micro):
         message(error)
 
 
+#
+# Upload the image image.jpg to the S3 bucket.
+# Change the permissions of the image to make it accessible.
+#
 def upload_img(bucket_name_in):
     bucket_name = bucket_name_in
     object_name = 'image.jpg'
 
     try:
         response = s3.Object(bucket_name, object_name).put(ACL='public-read', ContentType='image/jpeg', Body=open(object_name, 'rb'))
-        message('Response Code: '+response['HTTPStatusCode'])
+        message(response)
     except Exception as error:
         message(error)
 
 
+#
+# Create new home page for Apache with the image that is stored in the S3 bucket
+# Touch a file called index.html
+# Change permissions
+# Create the html file locally and then scp the file up to the instance
+#
 def create_new_home_page(bucket_name_in, dns):
 
     bucket_name = bucket_name_in
@@ -114,7 +136,7 @@ def create_new_home_page(bucket_name_in, dns):
         run(change_permissions, check=True, shell=True)
         run(scp_index, check=True, shell=True)
 
-        webbrowser.get('firefox').open_new_tab(image_url)
+        # webbrowser.get('firefox').open_new_tab(image_url)
 
     except CalledProcessError:
         message('something is Wrong')
@@ -124,6 +146,9 @@ def create_new_home_page(bucket_name_in, dns):
         run(scp_index, shell=True)
 
 
+#
+# scp download_jenkins.py file to the instance and run the file
+#
 def download_jenkins(dns):
 
     try:
@@ -140,6 +165,9 @@ def download_jenkins(dns):
         run(run_file, shell=True)
 
 
+#
+# scp check_memory.py file to the instance and run the file
+#
 def memory_usage(dns):
     try:
         scp_check_memory = 'scp -i /home/keithmaher/Keiths_KeyPair.pem check_memory.py ec2-user@'+dns+':/tmp'

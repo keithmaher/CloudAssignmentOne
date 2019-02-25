@@ -9,6 +9,13 @@
 from functions import *
 
 
+#
+# This function is designed to launch an aws EC2 instance.
+# It contains user data to install httpd(Apache)
+# httpd is not started on purpose so when check_webserver
+# runs it will see it is not running and start it.
+# This function Returns the instance ID
+#
 def launch_instance():
 
     user_data_script = """#!/bin/bash
@@ -46,20 +53,41 @@ def launch_instance():
     return new_instance_id
 
 
+# Define a main() function.
 def main():
 
+    # Launch an instance and return instance Id
     instance_id = launch_instance()
+
+    # Check the instance for Apache
     instance_dns = copy_and_check(instance_id)
+
+    # Gets the micro seconds just to add to the user input for the bucket name
     now = datetime.datetime.now()
     micro = str(now.microsecond)
+
+    # Prompt the user to name the S3 bucket
     name_input = input("Please name your S3 storage bucket (lowercase) -> ")
+    # Changes the input to lowercase
     bucket_name_input = name_input.lower()
+
+    # Create S3 bucket using the user input and micro
+    # Returns the unique bucket name
     bucket_name = create_bucket(bucket_name_input, micro)
+
+    # Upload an image to the S3 bucket using the bucket name returned prior
     upload_img(bucket_name)
+
+    # Create a new home page for the IP od the instance.
     create_new_home_page(bucket_name, instance_dns)
+
+    # Download and install Jenkins - Additional Features
     download_jenkins(instance_dns)
+
+    # Check memory usage and display to the user - Non functional issues
     memory_usage(instance_dns)
 
 
+# This is the standard boilerplate that calls the main() function.
 if __name__ == '__main__':
     main()

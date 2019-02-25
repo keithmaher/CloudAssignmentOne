@@ -15,6 +15,10 @@ def message(text):
 	print("* * * * * * * * * * * * * * * * *")
 
 
+#
+# Check to see if jenkins is running
+# If not running download and install
+#
 def download_jenkins():
 	try:
 		check_jenkins = 'ps -A | grep jenkins'
@@ -47,4 +51,3 @@ def main():
 # This is the standard boilerplate that calls the main() function.
 if __name__ == '__main__':
 	main()
-
