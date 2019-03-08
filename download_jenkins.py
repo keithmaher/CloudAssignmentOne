@@ -9,10 +9,10 @@
 from subprocess import *
 
 
-def message(text):
-	print("* * * * * * * * * * * * * * * * *")
-	print(text)
-	print("* * * * * * * * * * * * * * * * *")
+def message(input_text):
+    print(len(input_text) * "-")
+    print(input_text)
+    print(len(input_text) * "-")
 
 
 #
